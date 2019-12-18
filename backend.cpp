@@ -122,10 +122,14 @@ void Backend::onReplyFinished(QNetworkReply *reply)
                     variantStream.peakBandwidth = bandwidth.toUInt();
                     variantStream.audio = aud;
                     variantStream.videoStream.url = final.toString();
-                    if( codec.contains(",") ) ///TODO: !!!
+                    if( codec.contains(",") )
                     {
                         variantStream.videoStream.codec = Utils::getReadableCodec(codec.split(",").value(0));
                         variantStream.audioStream.codec = Utils::getReadableCodec(codec.split(",").value(1));
+                    }
+                    else
+                    {
+                        variantStream.videoStream.codec = Utils::getReadableCodec(codec);
                     }
                     variantStream.videoStream.resolution = resolution;
                     variantStream.videoStream.framerate = framerate;
@@ -336,7 +340,8 @@ void Backend::setModelData()
 {
     for(int i = 0; i < mVariantStreams.size(); ++i )
     {
-        if( mVideoModel->findItems(mVariantStreams.at(i).videoStream.url).isEmpty() )
+        if( !mVariantStreams.at(i).videoStream.url.isEmpty() &&
+                mVideoModel->findItems(mVariantStreams.at(i).videoStream.url).isEmpty() )
         {
             int rowCount = mVideoModel->rowCount();
             mVideoModel->insertRows(rowCount, 1, QModelIndex());
@@ -349,15 +354,15 @@ void Backend::setModelData()
 
             if( mVariantStreams.at(i).videoStream.realVideoBitrate == 0 )
             {
-                QString error = QString("Реальный битрейт равен нулю для видео-потока #%1")
-                        .arg(mVideoModel->findItems(mVariantStreams.at(i).videoStream.url).first()->index().row() + 1);
+                QString error = QString("Реальный битрейт равен нулю для видео-потока #%1").arg(rowCount + 1);
 
-                int rowCount = mLogModel->rowCount();
+                rowCount = mLogModel->rowCount();
                 mLogModel->insertRows(rowCount, 1, QModelIndex());
                 mLogModel->setData(mLogModel->index(rowCount, 0, QModelIndex()), error);
             }
         }
-        if( mAudioModel->findItems(mVariantStreams.at(i).audioStream.url).isEmpty() )
+        if( !mVariantStreams.at(i).audioStream.url.isEmpty() &&
+                mAudioModel->findItems(mVariantStreams.at(i).audioStream.url).isEmpty() )
         {
             int rowCount = mAudioModel->rowCount();
             mAudioModel->insertRows(rowCount, 1, QModelIndex());
@@ -370,10 +375,9 @@ void Backend::setModelData()
 
             if( mVariantStreams.at(i).audioStream.realAudioBitrate == 0 )
             {
-                QString error = QString("Реальный битрейт равен нулю для аудио-потока #%1")
-                        .arg(mAudioModel->findItems(mVariantStreams.at(i).audioStream.url).first()->index().row() + 1);
+                QString error = QString("Реальный битрейт равен нулю для аудио-потока #%1").arg(rowCount + 1);
 
-                int rowCount = mLogModel->rowCount();
+                rowCount = mLogModel->rowCount();
                 mLogModel->insertRows(rowCount, 1, QModelIndex());
                 mLogModel->setData(mLogModel->index(rowCount, 0, QModelIndex()), error);
             }
@@ -384,9 +388,22 @@ void Backend::setModelData()
     {
         if( !mVariantStreams[i].isInRange(mDeviation) )
         {
-            QString error = QString("Реальный битрейт вне допустимого диапазона для Variant Stream'а с видео-потоком #%1 и аудио-потоком #%2")
-                    .arg(mVideoModel->findItems(mVariantStreams.at(i).videoStream.url).first()->index().row() + 1)
-                    .arg(mAudioModel->findItems(mVariantStreams.at(i).audioStream.url).first()->index().row() + 1);
+            int video = !mVideoModel->findItems(mVariantStreams.at(i).videoStream.url).isEmpty()
+                    ? mVideoModel->findItems(mVariantStreams.at(i).videoStream.url).first()->index().row() + 1
+                    : 0;
+            int audio = !mAudioModel->findItems(mVariantStreams.at(i).audioStream.url).isEmpty()
+                    ? mAudioModel->findItems(mVariantStreams.at(i).audioStream.url).first()->index().row() + 1
+                    : 0;
+            QString error;
+            if( video == 0 && audio == 0 )
+                continue;
+            if( video == 0 && audio != 0 )
+                error = QString("Реальный битрейт вне допустимого диапазона для Variant Stream'а с аудио-потоком #%1").arg(audio);
+            if( video != 0 && audio == 0 )
+                error = QString("Реальный битрейт вне допустимого диапазона для Variant Stream'а с видео-потоком #%1").arg(video);
+            if( video != 0 && audio != 0 )
+                error = QString("Реальный битрейт вне допустимого диапазона для Variant Stream'а с видео-потоком #%1 и аудио-потоком #%2")
+                        .arg(video).arg(audio);
 
             int rowCount = mLogModel->rowCount();
             mLogModel->insertRows(rowCount, 1, QModelIndex());

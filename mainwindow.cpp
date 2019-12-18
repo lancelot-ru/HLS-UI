@@ -121,6 +121,10 @@ public:
         {
             mBackend->setDeviation(mBitratePercentEdit->text().toDouble());
         }
+        else
+        {
+            mBackend->setDeviation(10);
+        }
 
         mBackend->reset();
 
