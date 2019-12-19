@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 
 #include <QHeaderView>
-#include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
