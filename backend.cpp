@@ -208,7 +208,7 @@ void Backend::onAllRepliesFinished()
         }
         else
         {
-            QUrl base = pair.first->url().adjusted(QUrl::RemoveFilename);
+            //QUrl base = pair.first->url().adjusted(QUrl::RemoveFilename);
             QByteArray data = pair.first->readAll();
             QTextStream textStream(&data);
 
@@ -231,7 +231,9 @@ void Backend::onAllRepliesFinished()
                     count++;
                 }
             }
-            pair.second = (br * 1000) / count;
+
+            if (count > 0)
+                pair.second = (br * 1000) / count;
         }
     };
     QFuture<void> videoFuture = QtConcurrent::map(mVideoReplies, getVideoBitrate);
@@ -245,7 +247,7 @@ void Backend::onAllRepliesFinished()
         }
         else
         {
-            QUrl base = pair.first->url().adjusted(QUrl::RemoveFilename);
+            //QUrl base = pair.first->url().adjusted(QUrl::RemoveFilename);
             QByteArray data = pair.first->readAll();
             QTextStream textStream(&data);
 
@@ -268,7 +270,9 @@ void Backend::onAllRepliesFinished()
                     count++;
                 }
             }
-            pair.second = (br * 1000) / count;
+
+            if (count > 0)
+                pair.second = (br * 1000) / count;
         }
     };
     QFuture<void> audioFuture = QtConcurrent::map(mAudioReplies, getAudioBitrate);
